@@ -1,3 +1,4 @@
+//Clases que manejará typescript internamente para los datos de graphql
 export abstract class General {
     protected id: number | null;
 
@@ -56,8 +57,18 @@ export class Cuenta extends General {
     public constructor(id: number | null, contrasenna: number, saldo: string, tipo: string) {
         super(id);
         this.contrasenna = contrasenna;
-        this.saldo = saldo;
+        this.saldo = '';
         this.tipo = tipo;
+
+        if(typeof(saldo) === 'string') {
+
+            saldo = saldo.substring(1, saldo.length);
+            for(let i of saldo) {
+                if(i == ',') break;
+
+                if(i !== '.') this.saldo += i;
+            }
+        }
     };
 
     public getObject(): any {

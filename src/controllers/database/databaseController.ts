@@ -2,6 +2,7 @@ import { pool } from './database';
 import { getIdDB, getUpdateText, getValueText } from './functions';
 import { General } from '../clases';
 
+//Funciones internas de base de datos con las operaciones basicas a realizar
 export async function getAll(table: string): Promise<{ [x: string]: any; }[]> {
     const query: string = `SELECT * FROM ${table};`;
     return (await pool.query(query)).rows;

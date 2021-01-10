@@ -2,6 +2,16 @@ import { GraphQLSchema } from 'graphql';
 import { makeExecutableSchema, ITypeDefinitions } from 'graphql-tools';
 import { resolvers } from './resolvers';
 
+/*
+En typeDefs se definen los tipos de dato que manejará Graphql, entendiendo como tipo de dato un objeto clave-valor
+
+Los type son los datos que puede entender y retornar esta api
+
+Los input son objetos de mismas caracteristicas, pero que se utilizan para la entrada de datos en el query
+
+Los Query y Mutation definen a las funciones que se pueden llamar desde el api y que retornaran
+*/
+
 const typeDefs: ITypeDefinitions = `
 
     type Fecha {
@@ -25,6 +35,7 @@ const typeDefs: ITypeDefinitions = `
     }
 
     input ClienteInputRequired {
+        id: ID!
         nombre: String!
         apellido: String!
         edad: Int!

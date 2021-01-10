@@ -1,6 +1,16 @@
 import { Cliente, Cuenta, Fecha, Transaccion } from '../controllers/clases';
 import { getAll, createReg, deleteReg, getById, updateReg, createRelation, query } from '../controllers/database/databaseController';
 
+/*
+Funciones a ejecutar dependiendo de tipo y llamado definido en schema.ts
+
+Query define las funciones que unicamente tienen como proposito retornar datos
+
+Mutation modificaran los datos en base de datos ya sea creando, borrando o editando registros
+
+Cada propiedad individual de resolvers retornará un dato o un valor booleando indicando que el proceso se pudo realizar sin problemas
+*/
+
 export const resolvers: { [x: string]: any; } = {
     Query: {
         Cliente: async (_: any, { id }: { [id: string]: number | string; }): Promise<Cliente | null> => {
@@ -139,7 +149,7 @@ export const resolvers: { [x: string]: any; } = {
     Mutation: {
         CrearCliente: async (_: any, { input }: { [x: string]: any; }): Promise<Cliente | null> => {
             const cliente: Cliente = new Cliente(
-                null,
+                input.id,
                 input.nombre,
                 input.apellido,
                 input.edad

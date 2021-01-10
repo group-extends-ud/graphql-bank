@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 //Configuracion del proyecto para la utilizacion de variables de entorno
 config();
 
+//Definicion de variables utilizables para la conexion a base de datos
 export const key = {
     host: process.env.POSTGRES_HOST || 'localhost',
     user: process.env.POSTGRES_USER || 'user',
