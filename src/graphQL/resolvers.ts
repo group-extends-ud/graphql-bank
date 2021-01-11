@@ -1,5 +1,113 @@
-import { Cliente, Cuenta, Fecha, Transaccion } from '../controllers/clases';
-import { getAll, createReg, deleteReg, getById, updateReg, createRelation, query } from '../controllers/database/databaseController';
+import { Cliente, Cuenta, Fecha, General, Transaccion } from '../controllers/clases';
+import { getAll, createReg, deleteReg, getById, updateReg, createRelation, query, getRelation } from '../controllers/database/databaseController';
+
+//Funcion para instanciar un objeto de alguna de las clases hijas de General
+function instance(table: string, object: { [x: string]: any; }): any {
+
+    let general: General = new General();
+
+    if(!object) return null;
+
+    switch (table) {
+        case "Cliente":
+            general = new Cliente(object);
+            break;
+        
+        case "Cuenta":
+            general = new Cuenta(object);
+            break;
+        
+        case "Transaccion":
+            general = new Transaccion(object);
+        
+        default:
+            return true;
+    }
+
+    return general;
+
+}
+
+//Funcion para instanciar un arreglo de objetos de alguna de las clases hijas de General
+function instanceMultiple(table: string, object: { [x: string]: any }[]): any[] | null {
+
+    let generales: General[] = []
+
+    if(!(object.length)) return null;
+
+    object.forEach((element: { [x: string]: any; }) => {
+        switch (table) {
+            case "Cliente":
+                generales.push(new Cliente(element));
+                break;
+            
+            case "Cuenta":
+                generales.push(new Cuenta(element));
+                break;
+            
+            case "Transaccion":
+                generales.push(new Transaccion(element));
+        }
+    });
+
+    return generales;
+
+}
+
+//Funcion para obtener un arreglo de objetos dependiendo de la tabla en base de datos que se busque
+async function getMultiple(table: string): Promise<any[] | null> {
+
+    const response: { [x: string]: any; }[] = await getAll(table);
+
+    return instanceMultiple(table, response);
+
+}
+
+//Funcion para obtener un unico objeto dependiendo de tabla e id
+async function getUnique(table: string, id: number | string): Promise<any | null> {
+
+    const response: { [x: string]: any; } = await getById(table, id);
+
+    return instance(table, response);
+
+}
+
+//Funcion para obtener un arreglo de objetos con base a una relacion de interseccion entre tablas, y filtrado por un parametro especifico (opcional)
+async function getByRelation(table: string, tableForeign: string, idKey: number | string, tableObjetive: string = ''): Promise<any[] | null> {
+
+    const response: { [x: string]: any; }[] = await getRelation(table, tableForeign, idKey, tableObjetive);
+
+    return instanceMultiple(table, response);
+
+}
+
+//Metodo de creacion para la insercion de datos en base de datos
+async function createGeneral(table: string, input: { [x: string]: any; }): Promise<any | null> {
+
+    const general: General = instance(table, input);
+
+    const response: { [x: string]: any; } = await createReg(table, general);
+
+    return instance(table, response);
+}
+
+//Metodo de edicion para la actualizacion de datos en base de datos
+async function updateGeneral(table: string, input: { [x: string]: any; }, id: number | string): Promise<any | null> {
+    let general: General = instance(table, input);
+
+    const response: { [x: string]: any; } = await updateReg(table, general, id);
+
+    return instance(table, response);
+}
+
+//Metodo de borrado para la eliminacion de datos en base de datos
+async function deleteGeneral(table: string, id: number | string): Promise<any | null> {
+
+    const response: { [x: string]: any; } = await deleteReg(table, id);
+
+    return instance(table, response);
+    
+}
 
 /*
 Funciones a ejecutar dependiendo de tipo y llamado definido en schema.ts
@@ -14,284 +122,111 @@ Cada propiedad individual de resolvers retornará un dato o un valor booleando i
 export const resolvers: { [x: string]: any; } = {
     Query: {
         Cliente: async (_: any, { id }: { [id: string]: number | string; }): Promise<Cliente | null> => {
-            const response = await getById("Cliente", id);
-            return (response)? new Cliente(
-                response.k_id,
-                response.n_nombre,
-                response.n_apellido,
-                response.q_edad
-            ) : null;
+
+            return await getUnique("Cliente", id);
+
         },
         Clientes: async (): Promise<Cliente[] | null> => {
-            let clientes: Cliente[] = [];
-            const response = await getAll("Cliente");
 
-            if(!(response.length)) return null;
+            return await getMultiple("Cliente");
 
-            response.forEach((element: { [x: string]: any; }) => {
-                clientes.push(new Cliente(
-                    element.k_id,
-                    element.n_nombre,
-                    element.n_apellido,
-                    element.q_edad
-                ));
-            });
-
-            return clientes;
         },
 
         Cuenta: async (_: any, { id }: { [id: string]: number | string; }): Promise<Cuenta | null> => {
-            const response = await getById("Cuenta", id);
-            return (response)? new Cuenta(
-                response.k_idcuenta,
-                response.q_contrasenna,
-                response.q_saldo,
-                response.n_tipo
-            ) :  null;
+
+            return await getUnique("Cuenta", id);
+
         },
         Cuentas: async (): Promise<Cuenta[] | null> => {
-            let cuentas: Cuenta[] = [];
-            const response = await getAll("Cuenta");
 
-            if(!(response.length)) return null;
+            return await getMultiple("Cuenta");
 
-            response.forEach((element: { [x: string]: any; }) => {
-                cuentas.push(new Cuenta(
-                    element.k_idcuenta,
-                    element.q_contrasenna,
-                    element.q_saldo,
-                    element.n_tipo
-                ));
-            });
-            
-            return cuentas;
         },
 
         Transaccion: async (_: any, { id }: { [id: string]: number | string; }): Promise<Transaccion | null> => {
-            const response = await getById("Transaccion", id);
-            return (response)? new Transaccion(
-                response.k_idtx,
-                new Fecha(
-                    response.f_dia,
-                    response.f_mes,
-                    response.f_anno
-                ),
-                response.o_descripcion,
-                response.o_tipo,
-                response.k_idcuenta
-            ) : null;
+
+            return await getUnique("Transaccion", id);
+
         },
         Transacciones: async (): Promise<Transaccion[] | null> => {
-            let transacciones: Transaccion[] = [];
-            const response = await getAll("Transaccion");
 
-            if(!(response.length)) return null;
+            return await getMultiple("Transaccion");
 
-            response.forEach((element: { [x: string]: any; }) => {
-                transacciones.push(new Transaccion(
-                    element.k_idtx,
-                    new Fecha(
-                        element.f_dia,
-                        element.f_mes,
-                        element.f_anno
-                    ),
-                    element.o_descripcion,
-                    element.o_tipo,
-                    element.k_idcuenta
-                ));
-            });
-
-            return transacciones;
         },
 
         TransaccionesPorCuenta: async (_: any, { idCuenta }: { [id: string]: number | string; }): Promise<Transaccion[] | null> => {
-            let transacciones: Transaccion[] = [];
-            const response = await query('SELECT * FROM Transaccion WHERE K_IDCUENTA = $1 ORDER BY K_IDTX asc LIMIT 5;', [ idCuenta ]);
 
-            if(!(response.length)) return null;
-
-            response.forEach((element: { [x: string]: any; }) => {
-                transacciones.push(new Transaccion(
-                    element.k_idtx,
-                    new Fecha(
-                        element.f_dia,
-                        element.f_mes,
-                        element.f_anno
-                    ),
-                    element.o_descripcion,
-                    element.o_tipo,
-                    element.k_idcuenta
-                ));
-            });
-
-            return transacciones;
+            return await getByRelation("Transaccion", "Cuenta", idCuenta);
 
         },
         CuentasPorCliente: async (_: any, { idCliente }: { [id: string]: number | string; }): Promise<Cuenta[] | null> => {
-            let cuentas: Cuenta[] = [];
-            const response = await query('SELECT * FROM Cuenta INNER JOIN Cliente_Cuenta ON Cuenta.K_IDCUENTA = Cliente_Cuenta.K_IDCUENTA WHERE Cliente_Cuenta.K_ID = $1', [ idCliente ]);
-            
-            if(!(response.length)) return null;
 
-            response.forEach((element: { [x: string]: any; }) => {
-                cuentas.push(new Cuenta(
-                    element.k_idcuenta,
-                    element.q_contrasenna,
-                    element.q_saldo,
-                    element.n_tipo
-                ));
-            });
-            
-            return cuentas;
+            return await getByRelation("Cuenta", "Cliente_Cuenta", idCliente, "Cliente");
+
         }
     },
 
     Mutation: {
         CrearCliente: async (_: any, { input }: { [x: string]: any; }): Promise<Cliente | null> => {
-            const cliente: Cliente = new Cliente(
-                input.id,
-                input.nombre,
-                input.apellido,
-                input.edad
-            );
-            const response = await createReg("Cliente", cliente);
-            return (response)? new Cliente(
-                response.k_id,
-                response.n_nombre,
-                response.n_apellido,
-                response.q_edad
-            ) : null;
+
+            return await createGeneral("Cliente", input);
+
         },
         ActualizarCliente: async (_: any, { input }: { [id: string]: any; }): Promise<Cliente | null> => {
-            let cliente: Cliente = new Cliente(
-                input.id,
-                input.nombre,
-                input.apellido,
-                input.edad
-            );
-            const response = await updateReg("Cliente", cliente, input.id);
-            return (response)? new Cliente(
-                response.k_id,
-                response.n_nombre,
-                response.n_apellido,
-                response.q_edad
-            ) : null;
+
+            return await updateGeneral("Cliente", input, input.id);
+
         },
         BorrarCliente: async (_: any, { id }: { [id: string]: string | number; }): Promise<Cliente | null> => {
-            const response = await deleteReg("Cliente", id);
-            return (response)? new Cliente(
-                response.k_id,
-                response.n_nombre,
-                response.n_apellido,
-                response.q_edad
-            ) : null;
+
+            return await deleteGeneral("Cliente", id);
+
         },
 
         CrearCuenta: async (_: any, { input }: { [id: string]: any; }): Promise<Cuenta | null> => {
-            let cuenta: Cuenta = new Cuenta(
-                input.id,
-                input.contrasenna,
-                input.saldo,
-                input.tipo
-            );
-            const response = await createReg("Cuenta", cuenta);
-            return (response)? new Cuenta(
-                response.k_idcuenta,
-                response.q_contrasenna,
-                response.q_saldo,
-                response.n_tipo
-            ) : null;
+
+            return await createGeneral("Cuenta", input);
+
         },
         ActualizarCuenta: async (_: any, { input }: { [id: string]: any; }): Promise<Cuenta | null> => {
-            let cuenta: Cuenta = new Cuenta(
-                input.id,
-                input.contrasenna,
-                input.saldo,
-                input.tipo
-            );
-            const response = await updateReg("Cuenta", cuenta, input.id);
-            return (response)? new Cuenta(
-                response.k_idcuenta,
-                response.q_contrasenna,
-                response.q_saldo,
-                response.n_tipo
-            ) : null;
+
+            return await updateGeneral("Cuenta", input, input.id);
+
         },
         BorrarCuenta: async (_: any, { id }: { [id: string]: string | number; }): Promise<Cuenta | null> => {
-            const response = await deleteReg("Cuenta", id);
-            return (response)? new Cuenta(
-                response.k_idcuenta,
-                response.q_contrasenna,
-                response.q_saldo,
-                response.n_tipo
-            ) : null;
+
+            return await deleteGeneral("Cuenta", id);
+
         },
 
         CrearTransaccion: async (_: any, { input }: { [id: string]: any; }): Promise<Transaccion | null> => {
+
             const date: Date = new Date();
-            let transaccion: Transaccion = new Transaccion(
-                input.id,
-                new Fecha(
-                    date.getUTCDate(),
-                    date.getUTCMonth() + 1,
-                    date.getUTCFullYear()
-                ),
-                input.operacionDescripcion,
-                input.operacionTipo,
-                input.idCuenta
-            );
-            const response = await createReg("Transaccion", transaccion);
-            return (response)? new Transaccion(
-                response.k_idtx,
-                new Fecha(
-                    response.f_dia,
-                    response.f_mes,
-                    response.f_anno
-                ),
-                response.o_descripcion,
-                response.o_tipo,
-                response.k_idcuenta
-            ) : null;
+            input.fecha = {
+                dia: date.getUTCDate(),
+                mes: date.getUTCMonth() + 1,
+                anno: date.getUTCFullYear()
+            };
+
+            return await createGeneral("Transaccion", input);
+
         },
         ActualizarTransaccion: async (_: any, { input }: { [id: string]: any; }): Promise<Transaccion | null> => {
+
             const date: Date = new Date();
-            let transaccion: Transaccion = new Transaccion(
-                input.id,
-                new Fecha(
-                    date.getUTCDate(),
-                    date.getUTCMonth() + 1,
-                    date.getUTCFullYear()
-                ),
-                input.operacionDescripcion,
-                input.operacionTipo,
-                input.idCuenta
-            );
-            const response = await updateReg("Transaccion", transaccion, input.id);
-            return (response)? new Transaccion(
-                response.k_idtx,
-                new Fecha(
-                    response.f_dia,
-                    response.f_mes,
-                    response.f_anno
-                ),
-                response.o_descripcion,
-                response.o_tipo,
-                response.k_idcuenta
-            ) : null;
+            input.fecha = {
+                dia: date.getUTCDate(),
+                mes: date.getUTCMonth() + 1,
+                anno: date.getUTCFullYear()
+            };
+
+            return await updateGeneral("Transaccion", input, input.id);
+
         },
         BorrarTransaccion: async (_: any, { id }: { [id: string]: string | number; }): Promise<Transaccion | null> => {
-            const response = await deleteReg("Transaccion", id);
-            return (response)? new Transaccion(
-                response.k_idtx,
-                new Fecha(
-                    response.f_dia,
-                    response.f_mes,
-                    response.f_anno
-                ),
-                response.o_descripcion,
-                response.o_tipo,
-                response.k_idcuenta
-            ) : null;
+
+            return await deleteGeneral("Transaccion", id);
+            
         },
 
         VincularClienteCuenta: async (_: any, { idCliente, idCuenta }: { [x: string]: number | string; }): Promise<boolean> => {
@@ -299,8 +234,8 @@ export const resolvers: { [x: string]: any; } = {
             return (response)? true : false;
         },
         DesvincularClienteCuenta: async (_: any, { idCuenta }: { [id: string]: number | string; }): Promise<boolean> => {
-            const response = await deleteReg("Cliente_Cuenta", idCuenta);
-            return (response)? true : false;
+            const response = await deleteGeneral("Cliente_Cuenta", idCuenta);
+            return response;
         }
     }
 };

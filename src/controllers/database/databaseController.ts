@@ -15,7 +15,6 @@ export async function getById(table: string, id: number | string): Promise<{ [x:
 
 export async function createReg(table: string, object: General): Promise<{ [x: string]: any; }> {
     const query: string = `INSERT INTO ${table}${getValueText(object)} RETURNING *;`;
-    console.log(query);
     return (await pool.query(query, object.getArray())).rows[0];
 };
 
@@ -34,6 +33,19 @@ export async function createRelation(table: string, idKey: number | string, idFo
     return (await pool.query(query, [ idKey, idForeign ])).rows[0];
 }
 
-export async function query(query: string, array: any[]): Promise<{ [x: string]: any; }[]> {
+export async function getRelation(table: string, tableForeign: string, idKey: number | string, tableObjetive: string = ''): Promise<{ [x: string]: any; }[]> {
+    const idTableForeign: string = getIdDB(tableForeign);
+    let query: string = `SELECT * FROM ${table} INNER JOIN ${tableForeign} ON ${table}.${idTableForeign} = ${tableForeign}.${idTableForeign} WHERE ${tableForeign}.${(tableObjetive)? getIdDB(tableObjetive) : idTableForeign} = $1`;
+
+    if(table === 'Transaccion') query += ` ORDER BY ${getIdDB(table)} asc LIMIT 5`;
+
+    query += ';';
+
+    console.log(query);
+
+    return (await pool.query(query, [ idKey ])).rows;
+}
+
+export async function query(query: string, array: any[] = []): Promise<{ [x: string]: any; }[]> {
     return (array.length > 0)? (await pool.query(query, array)).rows : (await pool.query(query)).rows;
 }

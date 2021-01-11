@@ -21,5 +21,5 @@ app.set('port', process.env.PORT || 3000);
 app.listen(app.get('port'), async () => {
     await build();
     console.log(`Ejecutando GraphQL en ${process.env.HOST}:${app.get('port')}`);
-    console.log(`Ejecutando PostgreSQL en ${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}`);
+    console.log(`Ejecutando PostgreSQL en ${process.env.HOST}:${process.env.POSTGRES_PORT}`);
 });

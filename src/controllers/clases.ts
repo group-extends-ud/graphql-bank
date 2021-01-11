@@ -1,8 +1,8 @@
 //Clases que manejará typescript internamente para los datos de graphql
-export abstract class General {
+export class General {
     protected id: number | null;
 
-    public constructor(id: number | null) {
+    public constructor(id: number | null = null) {
         this.id = id;
     };
 
@@ -15,7 +15,7 @@ export abstract class General {
         return object;
     };
 
-    public abstract getObject(): any;
+    public getObject(): any {};
 
     public getArray(): any[] {
         let array: any[] = [];
@@ -31,11 +31,11 @@ export class Cliente extends General {
     private edad: number;
     private nombre: string; private apellido: string;
 
-    public constructor(id: number | null, nombre: string, apellido: string, edad: number) {
-        super(id);
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.edad = edad;
+    public constructor(object: { [x: string]: any; }) {
+        super(object.k_id || object.id);
+        this.nombre = object.n_nombre || object.nombre;
+        this.apellido = object.n_apellido || object.apellido;
+        this.edad = object.q_edad || object.edad;
     };
 
     public getObject(): any {
@@ -54,20 +54,20 @@ export class Cuenta extends General {
     private saldo: string;
     private tipo: string;
     
-    public constructor(id: number | null, contrasenna: number, saldo: string, tipo: string) {
-        super(id);
-        this.contrasenna = contrasenna;
+    public constructor(object: { [x: string]: any; }) {
+
+        let saldo = object.q_saldo || object.saldo;
+        
+        super(object.k_idcuenta || object.id);
+        this.contrasenna = object.q_contrasenna || object.contrasenna;
         this.saldo = '';
-        this.tipo = tipo;
+        this.tipo = object.n_tipo || object.tipo;
 
-        if(typeof(saldo) === 'string') {
+        if(saldo[0] === '$') saldo = saldo.substring(1, saldo.length);
+        for(let i of saldo) {
+            if(i === ',') break;
 
-            saldo = saldo.substring(1, saldo.length);
-            for(let i of saldo) {
-                if(i == ',') break;
-
-                if(i !== '.') this.saldo += i;
-            }
+            if(i !== '.') this.saldo += i;
         }
     };
 
@@ -85,11 +85,11 @@ export class Cuenta extends General {
 export class Fecha extends General {
     private dia: number; private mes: number; private anno: number;
 
-    public constructor(dia: number, mes: number, anno: number) {
-        super(null);
-        this.dia = dia;
-        this.mes = mes;
-        this.anno = anno;
+    public constructor(object: { [x: string]: any; }) {
+        super();
+        this.dia = object.dia;
+        this.mes = object.mes;
+        this.anno = object.anno;
     };
 
     public getObject(): any {
@@ -107,12 +107,16 @@ export class Transaccion extends General {
     private fecha: Fecha;
     private operacionDescripcion: string; private operacionTipo: string;
 
-    public constructor(id: number | null, fecha: Fecha, operacionDescripcion: string, operacionTipo: string, idCuenta: string) {
-        super(id);
-        this.fecha = fecha;
-        this.operacionDescripcion = operacionDescripcion;
-        this.operacionTipo = operacionTipo;
-        this.idCuenta = idCuenta;
+    public constructor(object: { [x: string]: any; }) {
+        super(object.k_idtx || object.id);
+        this.fecha = new Fecha(object.fecha || {
+            dia: object.f_dia,
+            mes: object.f_mes,
+            anno: object.f_anno
+        });
+        this.operacionDescripcion = object.o_descripcion || object.operacionDescripcion;
+        this.operacionTipo = object.o_tipo || object.operacionTipo;
+        this.idCuenta = object.k_idcuenta || object.idCuenta;
     };
 
     public getObject(): any {

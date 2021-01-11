@@ -17,10 +17,10 @@ DROP TABLE IF EXISTS Transaccion CASCADE
 
 CREATE TABLE Cliente
 (
-	K_ID numeric NOT NULL,
+	K_ID varchar(11) NOT NULL,
 	N_NOMBRE varchar NOT NULL,
 	N_APELLIDO varchar NOT NULL,
-	Q_EDAD integer NOT NULL
+	Q_EDAD numeric(3) NOT NULL
 )
 ;
 
@@ -29,13 +29,13 @@ CREATE TABLE Cuenta
 	K_IDCUENTA serial NOT NULL,
 	Q_SALDO money NOT NULL,
 	N_TIPO varchar NOT NULL,
-	Q_CONTRASENNA integer NOT NULL
+	Q_CONTRASENNA numeric(4) NOT NULL
 )
 ;
 
 CREATE TABLE Cliente_Cuenta
 (
-	K_ID numeric NOT NULL,
+	K_ID varchar(11) NOT NULL,
 	K_IDCUENTA integer NOT NULL
 )
 ;
