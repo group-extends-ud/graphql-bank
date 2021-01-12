@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS Cuenta_Aliada CASCADE
 CREATE SEQUENCE Cuenta_K_IDCUENTA_seq
 	AS integer START WITH 1000
 ;
+
 CREATE SEQUENCE Transaccion_K_IDTX_seq
 	AS integer
 ;

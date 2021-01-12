@@ -31,7 +31,7 @@ export async function updateReg(table: string, object: General): Promise<{ [x: s
 export async function createRelation(table: string, idForeignName: string, idKey: number | string, idForeign: number | string): Promise<{ [x: string]: any; }> {
     const query: string = `INSERT INTO ${table}(${getIdDB(table)}, ${idForeignName}) VALUES($1, $2) RETURNING *;`;
     return (await pool.query(query, [ idKey, idForeign ])).rows[0];
-}
+};
 
 export async function getRelation(table: string, tableForeign: string, idKey: number | string, tableObjetive: string = ''): Promise<{ [x: string]: any; }[]> {
     const idTableForeign: string = getIdDB(tableForeign);
@@ -42,8 +42,8 @@ export async function getRelation(table: string, tableForeign: string, idKey: nu
     query += ';';
 
     return (await pool.query(query, [ idKey ])).rows;
-}
+};
 
 export async function query(query: string, array: any[] = []): Promise<{ [x: string]: any; }[]> {
     return (array.length > 0)? (await pool.query(query, array)).rows : (await pool.query(query)).rows;
-}
+};
