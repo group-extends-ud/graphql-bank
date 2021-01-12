@@ -17,13 +17,13 @@ export async function build(): Promise<void> {
 }
 
 async function verifyTables(): Promise<boolean> {
-    let response: { [x: string]: any; }[] = [];
+    let response: number;
     try {
-        response = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = $1", [ 'public' ]);
+        response = (await query("SELECT count(table_name) FROM information_schema.tables WHERE table_schema = $1", [ 'public' ]))[0].count;
     } catch( _ ) {
         console.log("No se puede crear la base de datos externamente");
-        console.log(`Ejecuta: createdb -h ${process.env.HOST} -p ${DB.port} -U ${DB.user} ${DB.database}`);
+        console.log(`Ejecuta: createdb -h ${process.env.POSTGRES_HOST} -p ${DB.port} -U ${DB.user} ${DB.database}`);
         exit();
     }
-    return (response.length)? true : false;
+    return response == 5;
 }

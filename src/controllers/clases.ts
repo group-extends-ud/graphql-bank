@@ -57,18 +57,22 @@ export class Cuenta extends General {
     public constructor(object: { [x: string]: any; }) {
 
         let saldo = object.q_saldo || object.saldo;
+        let typeMoney: boolean = false;
         
         super(object.k_idcuenta || object.id);
         this.contrasenna = object.q_contrasenna || object.contrasenna;
         this.saldo = '';
         this.tipo = object.n_tipo || object.tipo;
 
-        if(saldo[0] === '$') saldo = saldo.substring(1, saldo.length);
-        for(let i of saldo) {
-            if(i === ',') break;
-
-            if(i !== '.') this.saldo += i;
+        if(saldo[0] === '$') {
+            saldo = saldo.substring(1, saldo.length);
+            typeMoney = true;
         }
+        for(let i of saldo) {
+
+            if(i !== '.' && i != ',' && i != ' ') this.saldo += i;
+        }
+        this.saldo = (typeMoney)? this.saldo.substring(0, this.saldo.length - 2) : this.saldo;
     };
 
     public getObject(): any {

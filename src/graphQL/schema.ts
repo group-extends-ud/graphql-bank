@@ -94,6 +94,7 @@ const typeDefs: ITypeDefinitions = `
 
         TransaccionesPorCuenta(idCuenta: ID!): [Transaccion]
         CuentasPorCliente(idCliente: ID!): [Cuenta]
+        CuentasAliadas(idCuenta: ID!): [Cuenta]
     }
 
     type Mutation {
@@ -111,6 +112,9 @@ const typeDefs: ITypeDefinitions = `
 
         VincularClienteCuenta(idCliente: ID!, idCuenta: ID!): Boolean
         DesvincularClienteCuenta(idCuenta: ID!): Boolean
+
+        VincularCuentaAliada(idCuenta: ID!, idCuentaAliada: ID!): Boolean
+        DesvincularCuentaAliada(idCuenta: ID!, idCuentaAliada: ID!): Boolean
     }
 `;
 

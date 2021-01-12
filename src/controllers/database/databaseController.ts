@@ -23,13 +23,13 @@ export async function deleteReg(table: string, id: number | string): Promise<{ [
     return (await pool.query(query, [ id ])).rows[0];
 };
 
-export async function updateReg(table: string, object: General, id: number | string): Promise<{ [x: string]: any; }> {
+export async function updateReg(table: string, object: General): Promise<{ [x: string]: any; }> {
     const query: string = `UPDATE ${table} SET ${getUpdateText(table, object)} RETURNING *;`;
     return (await pool.query(query, object.getArray())).rows[0];
 };
 
-export async function createRelation(table: string, idKey: number | string, idForeign: number | string): Promise<{ [x: string]: any; }> {
-    const query: string = `INSERT INTO ${table}(${getIdDB(table)}, K_ID) VALUES($1, $2) RETURNING *;`;
+export async function createRelation(table: string, idForeignName: string, idKey: number | string, idForeign: number | string): Promise<{ [x: string]: any; }> {
+    const query: string = `INSERT INTO ${table}(${getIdDB(table)}, ${idForeignName}) VALUES($1, $2) RETURNING *;`;
     return (await pool.query(query, [ idKey, idForeign ])).rows[0];
 }
 
@@ -40,8 +40,6 @@ export async function getRelation(table: string, tableForeign: string, idKey: nu
     if(table === 'Transaccion') query += ` ORDER BY ${getIdDB(table)} asc LIMIT 5`;
 
     query += ';';
-
-    console.log(query);
 
     return (await pool.query(query, [ idKey ])).rows;
 }

@@ -7,16 +7,14 @@ export function getIdDB(table: string): string {
         case 'Cliente':
             return 'K_ID';
 
-        case 'Cuenta':
-            return 'K_IDCUENTA';
-
         case 'Transaccion':
             return 'K_IDTX';
-            
-        case 'Cliente_Cuenta':
+
+        case 'Cuenta_Aliada':
+            return 'K_IDCUENTAALIADA';
+        default:
             return 'K_IDCUENTA';
     }
-    return "";
 }
 
 export function getValueText(object: General): string {

@@ -92,10 +92,10 @@ async function createGeneral(table: string, input: { [x: string]: any; }): Promi
 }
 
 //Metodo de edicion para la actualizacion de datos en base de datos
-async function updateGeneral(table: string, input: { [x: string]: any; }, id: number | string): Promise<any | null> {
+async function updateGeneral(table: string, input: { [x: string]: any; }): Promise<any | null> {
     let general: General = instance(table, input);
 
-    const response: { [x: string]: any; } = await updateReg(table, general, id);
+    const response: { [x: string]: any; } = await updateReg(table, general);
 
     return instance(table, response);
 }
@@ -163,6 +163,11 @@ export const resolvers: { [x: string]: any; } = {
 
             return await getByRelation("Cuenta", "Cliente_Cuenta", idCliente, "Cliente");
 
+        },
+        CuentasAliadas: async (_: any, { idCuenta }: { [id: string]: number | string; }): Promise<Cuenta[] | null> => {
+
+            return await getByRelation("Cuenta", "Cuenta_Aliada", idCuenta);
+
         }
     },
 
@@ -174,7 +179,7 @@ export const resolvers: { [x: string]: any; } = {
         },
         ActualizarCliente: async (_: any, { input }: { [id: string]: any; }): Promise<Cliente | null> => {
 
-            return await updateGeneral("Cliente", input, input.id);
+            return await updateGeneral("Cliente", input);
 
         },
         BorrarCliente: async (_: any, { id }: { [id: string]: string | number; }): Promise<Cliente | null> => {
@@ -190,7 +195,7 @@ export const resolvers: { [x: string]: any; } = {
         },
         ActualizarCuenta: async (_: any, { input }: { [id: string]: any; }): Promise<Cuenta | null> => {
 
-            return await updateGeneral("Cuenta", input, input.id);
+            return await updateGeneral("Cuenta", input);
 
         },
         BorrarCuenta: async (_: any, { id }: { [id: string]: string | number; }): Promise<Cuenta | null> => {
@@ -220,7 +225,7 @@ export const resolvers: { [x: string]: any; } = {
                 anno: date.getUTCFullYear()
             };
 
-            return await updateGeneral("Transaccion", input, input.id);
+            return await updateGeneral("Transaccion", input);
 
         },
         BorrarTransaccion: async (_: any, { id }: { [id: string]: string | number; }): Promise<Transaccion | null> => {
@@ -230,12 +235,23 @@ export const resolvers: { [x: string]: any; } = {
         },
 
         VincularClienteCuenta: async (_: any, { idCliente, idCuenta }: { [x: string]: number | string; }): Promise<boolean> => {
-            const response = await createRelation("Cliente_Cuenta", idCuenta, idCliente);
+            const response = await createRelation("Cliente_Cuenta", "K_ID", idCuenta, idCliente);
             return (response)? true : false;
         },
         DesvincularClienteCuenta: async (_: any, { idCuenta }: { [id: string]: number | string; }): Promise<boolean> => {
             const response = await deleteGeneral("Cliente_Cuenta", idCuenta);
             return response;
+        },
+
+        VincularCuentaAliada: async (_: any, { idCuenta, idCuentaAliada }: { [x: string]: number | string; }): Promise<boolean> => {
+            const responseA = await createRelation("Cuenta_Aliada", "K_IDCUENTAALIADA", idCuenta, idCuentaAliada);
+            const responseB = await createRelation("Cuenta_Aliada", "K_IDCUENTAALIADA", idCuentaAliada, idCuenta);
+            return (responseA && responseB)? true : false;
+        },
+        DesvincularCuentaAliada: async (_: any, { idCuenta, idCuentaAliada }: { [id: string]: number | string; }): Promise<boolean> => {
+            const responseA = (await query("DELETE FROM Cuenta_Aliada WHERE K_IDCUENTA = $1 AND K_IDCUENTAALIADA = $2 RETURNING *;", [idCuenta, idCuentaAliada])).length;
+            const responseB = (await query("DELETE FROM Cuenta_Aliada WHERE K_IDCUENTA = $1 AND K_IDCUENTAALIADA = $2 RETURNING *;", [idCuentaAliada, idCuenta])).length;
+            return (responseA && responseB)? true : false;
         }
     }
 };
