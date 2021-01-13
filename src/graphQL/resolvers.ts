@@ -237,13 +237,7 @@ export const resolvers: { [x: string]: any; } = {
             switch (input.operacionTipo) {
                 case 'Consulta':
                     response = await transaccionesPorCuenta(input.idCuenta);
-                    if(input.operacionDescripcion == "Last") {
-                        try {
-                            response = response[0];
-                        } catch( _ ) {
-                            response = null;
-                        }
-                    }
+                    response = response[0];
 
                 case 'Transferencia':
                     if(validateMoney) {
