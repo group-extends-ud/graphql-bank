@@ -15,7 +15,7 @@ export function getIdDB(table: string): string {
         default:
             return 'K_IDCUENTA';
     }
-}
+};
 
 export function getValueText(object: General): string {
     let query: string = '(';
@@ -29,7 +29,7 @@ export function getValueText(object: General): string {
     }
     query = query.substring(0, query.length - 2) + ')';
     return query;
-}
+};
 
 export function getUpdateText(table: string, object: General): string {
     let query: string = '';
@@ -43,4 +43,4 @@ export function getUpdateText(table: string, object: General): string {
     query = query.substring(0, query.length - 2);
     query += ` WHERE ${getIdDB(table)} = $1`;
     return query;
-}
+};

@@ -28,18 +28,27 @@ export async function updateReg(table: string, object: General): Promise<{ [x: s
     return (await pool.query(query, object.getArray())).rows[0];
 };
 
-export async function createRelation(table: string, idForeignName: string, idKey: number | string, idForeign: number | string): Promise<{ [x: string]: any; }> {
-    const query: string = `INSERT INTO ${table}(${getIdDB(table)}, ${idForeignName}) VALUES($1, $2) RETURNING *;`;
-    return (await pool.query(query, [ idKey, idForeign ])).rows[0];
+export async function createRelation(tableRelation: string, table: string, idKey: number | string, idRelation: number | string): Promise<{ [x: string]: any; }> {
+    const query: string = `INSERT INTO ${tableRelation}(${getIdDB(table)}, ${getIdDB(tableRelation)}) VALUES($1, $2) RETURNING *;`;
+    return (await pool.query(query, [ idKey, idRelation ])).rows[0];
 };
 
-export async function getRelation(table: string, tableForeign: string, idKey: number | string, tableObjetive: string = ''): Promise<{ [x: string]: any; }[]> {
-    const idTableForeign: string = getIdDB(tableForeign);
-    let query: string = `SELECT * FROM ${table} INNER JOIN ${tableForeign} ON ${table}.${idTableForeign} = ${tableForeign}.${idTableForeign} WHERE ${tableForeign}.${(tableObjetive)? getIdDB(tableObjetive) : idTableForeign} = $1`;
+export async function getRelation(tableRelation: string, table: string, idKey: number | string): Promise<{ [x: string]: any; }[]> {
+    let query: string = `SELECT * FROM ${table} INNER JOIN ${tableRelation} ON `;
 
-    if(table === 'Transaccion') query += ` ORDER BY ${getIdDB(table)} asc LIMIT 5`;
+    switch (tableRelation) {
+        case 'Cuenta':
+            query += 'Transaccion.K_IDCUENTA = Cuenta.K_IDCUENTA WHERE Cuenta.K_IDCUENTA = $1 ORDER BY K_IDTX desc LIMIT 5;';
+            break;
 
-    query += ';';
+        case 'Cliente_Cuenta':
+            query += 'Cuenta.K_IDCUENTA = Cliente_Cuenta.K_IDCUENTA WHERE Cliente_Cuenta.K_ID = $1;';
+            break;
+    
+        default:
+            query += 'Cuenta.K_IDCUENTA = Cuenta_Aliada.K_IDCUENTAALIADA WHERE Cuenta_Aliada.K_IDCUENTA = $1;';
+            break;
+    }
 
     return (await pool.query(query, [ idKey ])).rows;
 };
