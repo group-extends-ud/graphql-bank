@@ -227,13 +227,6 @@ export const resolvers: { [x: string]: any; } = {
 
             const validateMoney: boolean = (saldoTransaccion <= saldoCuenta)? true : false;
 
-            const date: Date = new Date();
-            input.fecha = {
-                dia: date.getUTCDate(),
-                mes: date.getUTCMonth() + 1,
-                anno: date.getUTCFullYear()
-            };
-
             switch (input.operacionTipo) {
                 case 'Consulta':
                     response = await transaccionesPorCuenta(input.idCuenta);
@@ -257,13 +250,6 @@ export const resolvers: { [x: string]: any; } = {
 
         },
         ActualizarTransaccion: async (_: any, { input }: { [id: string]: any; }): Promise<Transaccion | null> => {
-
-            const date: Date = new Date();
-            input.fecha = {
-                dia: date.getUTCDate(),
-                mes: date.getUTCMonth() + 1,
-                anno: date.getUTCFullYear()
-            };
 
             return await updateGeneral("Transaccion", input);
 

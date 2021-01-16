@@ -14,12 +14,6 @@ Los Query y Mutation definen a las funciones que se pueden llamar desde el api y
 
 const typeDefs: ITypeDefinitions = `
 
-    type Fecha {
-        dia: Int!
-        mes: Int!
-        anno: Int!
-    }
-
     type Cliente {
         id: ID!
         nombre: String!
@@ -63,7 +57,7 @@ const typeDefs: ITypeDefinitions = `
 
     type Transaccion {
         id: ID!
-        fecha: Fecha!
+        fecha: String!
         operacionDescripcion: String!
         operacionTipo: String!
         idCuenta: ID!
