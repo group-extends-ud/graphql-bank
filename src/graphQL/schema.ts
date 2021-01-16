@@ -87,8 +87,12 @@ const typeDefs: ITypeDefinitions = `
         Transacciones: [Transaccion]
 
         TransaccionesPorCuenta(idCuenta: ID!): [Transaccion]
+        UltimaTransaccion(idCuenta: ID!): Transaccion
+
         CuentasPorCliente(idCliente: ID!): [Cuenta]
         CuentasAliadas(idCuenta: ID!): [Cuenta]
+
+        Login(idCuenta: ID!, contrasenna: Int!): Boolean
     }
 
     type Mutation {

@@ -172,6 +172,16 @@ export const resolvers: { [x: string]: any; } = {
             return await getByRelation("Transaccion", "Cuenta", idCuenta);
         
         },
+        UltimaTransaccion: async(_: any, { idCuenta }: { [id: string]: number | string; }): Promise<Transaccion | null> => {
+            let response: Transaccion[] | null = await getByRelation("Transaccion", "Cuenta", idCuenta)
+            let id: number = 1;
+            response?.forEach(element => {
+                id = (element.getObject().K_IDTX > id)? element.getObject().K_IDTX : id;
+            });
+            let transaccion: Transaccion | undefined = (response?.find(element => element.getObject().K_IDTX == id));
+            return (transaccion)? transaccion : null;
+        },
+
         CuentasPorCliente: async (_: any, { idCliente }: { [id: string]: number | string; }): Promise<Cuenta[] | null> => {
         
             return await getByRelation("Cuenta", "Cliente_Cuenta", idCliente);
@@ -181,6 +191,11 @@ export const resolvers: { [x: string]: any; } = {
 
             return await getByRelation("Cuenta", "Cuenta_Aliada", idCuenta);
 
+        },
+
+        Login: async (_: any, { idCuenta, contrasenna }: { [x: string]: number | string; }): Promise<boolean> => {
+            let response: Cuenta = await getUnique("Cuenta", idCuenta);
+            return response.getObject().Q_CONTRASENNA == contrasenna;
         }
     },
 
@@ -228,10 +243,6 @@ export const resolvers: { [x: string]: any; } = {
             const validateMoney: boolean = (saldoTransaccion <= saldoCuenta)? true : false;
 
             switch (input.operacionTipo) {
-                case 'Consulta':
-                    response = await transaccionesPorCuenta(input.idCuenta);
-                    response = response[0];
-
                 case 'Transferencia':
                     if(validateMoney) {
                         const cuentaAliada = (await getUnique("Cuenta", description[0])).getObject();
