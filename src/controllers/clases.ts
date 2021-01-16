@@ -93,7 +93,7 @@ export class Transaccion extends General {
 
     public constructor(object: { [x: string]: any; }) {
         super(object.k_idtx || object.id);
-        this.fecha = (new Date(object.d_date)).toDateString();
+        this.fecha = (object.d_date)? (new Date(object.d_date)).toDateString() : "";
         this.operacionDescripcion = object.o_descripcion || object.operacionDescripcion;
         this.operacionTipo = object.o_tipo || object.operacionTipo;
         this.idCuenta = object.k_idcuenta || object.idCuenta;

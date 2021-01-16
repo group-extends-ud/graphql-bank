@@ -234,6 +234,8 @@ export const resolvers: { [x: string]: any; } = {
 
         CrearTransaccion: async (_: any, { input }: { [id: string]: any; }): Promise<Transaccion | null> => {
 
+            let realizaCambio: boolean = false;
+
             let response: any = null;
 
             const saldoCuenta = Number((await getUnique("Cuenta", input.idCuenta)).getObject().Q_SALDO);
@@ -255,8 +257,18 @@ export const resolvers: { [x: string]: any; } = {
                     if(validateMoney) {
                         await updateGeneral("Cuenta", {id: input.idCuenta, saldo: String(saldoCuenta - saldoTransaccion)});
                         response = await createGeneral("Transaccion", input);
+                        realizaCambio = true;
                     }
             }
+
+            if(realizaCambio && !(response)) {
+                if(input.operacionTipo == 'Transferencia') {
+                    const cuentaAliada = (await getUnique("Cuenta", description[0])).getObject();
+                    await updateGeneral("Cuenta", {id: cuentaAliada.K_IDCUENTA, saldo: String(Number(cuentaAliada.Q_SALDO) - saldoTransaccion)});
+                }
+                await updateGeneral("Cuenta", {id: input.idCuenta, saldo: String(saldoCuenta + saldoTransaccion)});
+            }
+
             return response;
 
         },
