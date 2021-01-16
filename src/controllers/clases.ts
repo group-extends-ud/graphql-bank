@@ -86,38 +86,14 @@ export class Cuenta extends General {
 
 };
 
-export class Fecha extends General {
-    private dia: number; private mes: number; private anno: number;
-
-    public constructor(object: { [x: string]: any; }) {
-        super();
-        this.dia = object.dia;
-        this.mes = object.mes;
-        this.anno = object.anno;
-    };
-
-    public getObject(): any {
-        return super.processObject({
-            F_DIA: this.dia,
-            F_MES: this.mes,
-            F_ANNO: this.anno
-        });
-    };
-
-};
-
 export class Transaccion extends General {
     private idCuenta: string;
-    private fecha: Fecha;
+    private fecha: string;
     private operacionDescripcion: string; private operacionTipo: string;
 
     public constructor(object: { [x: string]: any; }) {
         super(object.k_idtx || object.id);
-        this.fecha = new Fecha(object.fecha || {
-            dia: object.f_dia,
-            mes: object.f_mes,
-            anno: object.f_anno
-        });
+        this.fecha = (new Date(object.d_date)).toDateString();
         this.operacionDescripcion = object.o_descripcion || object.operacionDescripcion;
         this.operacionTipo = object.o_tipo || object.operacionTipo;
         this.idCuenta = object.k_idcuenta || object.idCuenta;
@@ -127,9 +103,7 @@ export class Transaccion extends General {
         return super.processObject({
             K_IDTX: this.id,
             K_IDCUENTA: this.idCuenta,
-            F_DIA: this.fecha.getObject().F_DIA,
-            F_MES: this.fecha.getObject().F_MES,
-            F_ANNO: this.fecha.getObject().F_ANNO,
+            D_DATE: this.fecha,
             O_DESCRIPCION: this.operacionDescripcion,
             O_TIPO: this.operacionTipo
         });
