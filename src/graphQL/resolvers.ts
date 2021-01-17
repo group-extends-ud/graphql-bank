@@ -232,13 +232,13 @@ export const resolvers: { [x: string]: any; } = {
 
         },
 
-        CrearTransaccion: async (_: any, { input }: { [id: string]: any; }): Promise<Transaccion | null> => {
+        CrearTransaccion: async (_: any, { input }: { [x: string]: any; }): Promise<Transaccion | null> => {
 
             let realizaCambio: boolean = false;
 
             let response: any = null;
 
-            const saldoCuenta = Number((await getUnique("Cuenta", input.idCuenta)).getObject().Q_SALDO);
+            const saldoCuenta: number = Number((await getUnique("Cuenta", input.idCuenta)).getObject().Q_SALDO);
             const description: string[] = input.operacionDescripcion.split(' ');
             const saldoTransaccion: number = Number((description.length > 1)? description[1] : description[0]);
 
@@ -246,14 +246,18 @@ export const resolvers: { [x: string]: any; } = {
 
             switch (input.operacionTipo) {
                 case 'Transferencia':
+                    if(description.length !== 2) break;
+                    if(description[0] == input.idCuenta) break;
+
                     if(validateMoney) {
-                        const cuentaAliada = (await getUnique("Cuenta", description[0])).getObject();
+                        const cuentaAliada: any = (await getUnique("Cuenta", description[0])).getObject();
+
                         await updateGeneral("Cuenta", {id: cuentaAliada.K_IDCUENTA, saldo: String(Number(cuentaAliada.Q_SALDO) + saldoTransaccion)});
                     } else {
                         break;
                     };
             
-                default:
+                case "Retiro":
                     if(validateMoney) {
                         await updateGeneral("Cuenta", {id: input.idCuenta, saldo: String(saldoCuenta - saldoTransaccion)});
                         response = await createGeneral("Transaccion", input);
@@ -267,6 +271,7 @@ export const resolvers: { [x: string]: any; } = {
                     await updateGeneral("Cuenta", {id: cuentaAliada.K_IDCUENTA, saldo: String(Number(cuentaAliada.Q_SALDO) - saldoTransaccion)});
                 }
                 await updateGeneral("Cuenta", {id: input.idCuenta, saldo: String(saldoCuenta + saldoTransaccion)});
+                await deleteGeneral("Transaccion", response?.getObject().K_IDTX);
             }
 
             return response;
