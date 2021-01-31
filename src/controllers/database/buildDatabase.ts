@@ -25,5 +25,5 @@ async function verifyTables(): Promise<boolean> {
         console.log(`Ejecuta: createdb -h ${process.env.POSTGRES_HOST} -p ${DB.port} -U ${DB.user} ${DB.database}`);
         exit();
     }
-    return response == 5;
+    return response == 6;
 }

@@ -113,6 +113,8 @@ const typeDefs: ITypeDefinitions = `
 
         VincularCuentaAliada(idCuenta: ID!, idCuentaAliada: ID!): Boolean
         DesvincularCuentaAliada(idCuenta: ID!, idCuentaAliada: ID!): Boolean
+
+        UnlockAccount(idCuenta: ID!): Boolean
     }
 `;
 

@@ -16,6 +16,9 @@ DROP TABLE IF EXISTS Transaccion CASCADE
 DROP TABLE IF EXISTS Cuenta_Aliada CASCADE
 ;
 
+DROP TABLE IF EXISTS Access CASCADE
+;
+
 /* Create Tables */
 
 CREATE TABLE Cliente
@@ -32,7 +35,8 @@ CREATE TABLE Cuenta
 	K_IDCUENTA serial NOT NULL,
 	Q_SALDO money NOT NULL,
 	N_TIPO varchar NOT NULL,
-	Q_CONTRASENNA numeric(4) NOT NULL
+	Q_CONTRASENNA numeric(4) NOT NULL,
+	B_UNLONCK bool NOT NULL DEFAULT true
 )
 ;
 
@@ -59,6 +63,13 @@ CREATE TABLE Cuenta_Aliada
 	K_IDCUENTAALIADA integer NOT NULL
 )
 ;
+
+CREATE TABLE Access
+(
+	K_IDCUENTA integer NOT NULL,
+	D_LAST_ACCESS TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	I_FAILED_TRIES integer NOT NULL
+);
 
 /* Create Primary Keys, Indexes, Uniques, Checks */
 
@@ -88,6 +99,10 @@ ALTER TABLE Cuenta_Aliada ADD CONSTRAINT PK_CUENTA_ALIADA
 	PRIMARY KEY (K_IDCUENTA, K_IDCUENTAALIADA)
 ;
 
+ALTER TABLE Access ADD CONSTRAINT PK_ACCESS
+	PRIMARY KEY (K_IDCUENTA)
+;
+
 /* Create Foreign Key Constraints */
 
 ALTER TABLE Transaccion ADD CONSTRAINT FK_Transaccion_Cuenta
@@ -110,6 +125,10 @@ ALTER TABLE CUENTA_ALIADA ADD CONSTRAINT FK_CUENTA_ALIADA_Aliada
 	FOREIGN KEY (K_IDCUENTAALIADA) REFERENCES Cuenta (K_IDCUENTA) ON DELETE No Action ON UPDATE No Action
 ;
 
+ALTER TABLE Access ADD CONSTRAINT FK_ACCESS_Cuenta
+	FOREIGN KEY (K_IDCUENTA) REFERENCES Cuenta (K_IDCUENTA) ON DELETE No Action ON UPDATE No Action
+;
+
 /* Alter sequence from Cuenta */
 
 ALTER SEQUENCE cuenta_k_idcuenta_seq RESTART WITH 1000
@@ -117,3 +136,42 @@ ALTER SEQUENCE cuenta_k_idcuenta_seq RESTART WITH 1000
 
 SET TIME ZONE 'America/Bogota'
 ;
+
+/* Create Triggers */
+
+CREATE OR REPLACE FUNCTION add_reg() RETURNS TRIGGER AS $add_reg$
+    DECLARE
+        idCuenta integer;
+	BEGIN
+        IF(TG_TABLE_NAME = 'cliente') THEN
+            INSERT INTO Cuenta(Q_SALDO, N_TIPO, Q_CONTRASENNA) VALUES(10000000, 'VIP', 1234) RETURNING K_IDCUENTA INTO idCuenta;
+            INSERT INTO Cliente_Cuenta(K_ID, K_IDCUENTA) VALUES(NEW.K_ID, idCuenta);
+        ELSEIF(TG_TABLE_NAME = 'cuenta') THEN
+            INSERT INTO Access(K_IDCUENTA, I_FAILED_TRIES) VALUES(NEW.K_IDCUENTA, 0);
+        END IF;
+        RETURN NULL;
+    END;
+$add_reg$ LANGUAGE plpgsql;
+
+CREATE TRIGGER add_Cuenta
+    AFTER INSERT ON Cliente
+    FOR EACH ROW EXECUTE PROCEDURE add_reg();
+
+CREATE TRIGGER add_Access
+    AFTER INSERT ON Cuenta
+    FOR EACH ROW EXECUTE PROCEDURE add_reg();
+
+CREATE OR REPLACE FUNCTION lock_unlock_account() RETURNS TRIGGER AS $lock_unlock_account$
+    BEGIN
+        IF(NEW.I_FAILED_TRIES >= 3) THEN
+            UPDATE Cuenta SET B_UNLONCK = false WHERE K_IDCUENTA = NEW.K_IDCUENTA;
+        ELSEIF(NEW.I_FAILED_TRIES = 0) THEN
+            UPDATE Cuenta SET B_UNLONCK = true WHERE K_IDCUENTA = NEW.K_IDCUENTA;
+        END IF;
+        RETURN NULL;
+    END;
+$lock_unlock_account$ LANGUAGE plpgsql;
+
+CREATE TRIGGER lock_unlock_account
+    AFTER UPDATE ON Access
+    FOR EACH ROW EXECUTE PROCEDURE lock_unlock_account();

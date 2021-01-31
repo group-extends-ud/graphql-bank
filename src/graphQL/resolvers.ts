@@ -194,8 +194,18 @@ export const resolvers: { [x: string]: any; } = {
         },
 
         Login: async (_: any, { idCuenta, contrasenna }: { [x: string]: number | string; }): Promise<boolean> => {
-            let response: Cuenta = await getUnique("Cuenta", idCuenta);
-            return response.getObject().Q_CONTRASENNA == contrasenna;
+            const response: Cuenta = await getUnique("Cuenta", idCuenta);
+
+            let count = (await getById("Access", idCuenta)).i_failed_tries;
+
+            let login: boolean = response.getObject().Q_CONTRASENNA == contrasenna;
+            login = count < 3 && login;
+
+            count = (login)? 0 : ++count;
+
+            await query("UPDATE Access SET D_LAST_ACCESS = CURRENT_TIMESTAMP, I_FAILED_TRIES = $2 WHERE K_IDCUENTA = $1;", [ idCuenta, count ]);
+
+            return login;
         }
     },
 
@@ -303,6 +313,11 @@ export const resolvers: { [x: string]: any; } = {
         },
         DesvincularCuentaAliada: async (_: any, { idCuenta, idCuentaAliada }: { [id: string]: number | string; }): Promise<boolean> => {
             const response = (await query("DELETE FROM Cuenta_Aliada WHERE K_IDCUENTA = $1 AND K_IDCUENTAALIADA = $2 RETURNING *;", [idCuenta, idCuentaAliada])).length;
+            return (response)? true : false;
+        },
+
+        UnlockAccount: async (_: any, { idCuenta }: { [x: string]: number | string }): Promise<boolean> => {
+            const response = await query("UPDATE Access SET D_LAST_ACCESS = CURRENT_TIMESTAMP, I_FAILED_TRIES = $2 WHERE K_IDCUENTA = $1;", [ idCuenta, 0 ]);
             return (response)? true : false;
         }
     }
