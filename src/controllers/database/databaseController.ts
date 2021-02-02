@@ -34,19 +34,19 @@ export async function createRelation(tableRelation: string, table: string, idKey
 };
 
 export async function getRelation(tableRelation: string, table: string, idKey: number | string): Promise<{ [x: string]: any; }[]> {
-    let query: string = `SELECT * FROM ${table} INNER JOIN ${tableRelation} ON `;
+    let query: string;
 
     switch (tableRelation) {
         case 'Cuenta':
-            query += 'Transaccion.K_IDCUENTA = Cuenta.K_IDCUENTA WHERE Cuenta.K_IDCUENTA = $1 ORDER BY K_IDTX desc LIMIT 5;';
+            query =`SELECT K_IDTX, ${table}.K_IDCUENTA, D_DATE, O_DESCRIPCION, O_TIPO FROM ${table} INNER JOIN ${tableRelation} ON ${table}.K_IDCUENTA = ${tableRelation}.K_IDCUENTA WHERE ${tableRelation}.K_IDCUENTA = $1 ORDER BY K_IDTX desc LIMIT 5;`;
             break;
 
         case 'Cliente_Cuenta':
-            query += 'Cuenta.K_IDCUENTA = Cliente_Cuenta.K_IDCUENTA WHERE Cliente_Cuenta.K_ID = $1;';
+            query = `SELECT ${table}.K_IDCUENTA, Q_SALDO, N_TIPO, Q_CONTRASENNA FROM ${table} INNER JOIN ${tableRelation} ON ${table}.K_IDCUENTA = ${tableRelation}.K_IDCUENTA WHERE ${tableRelation}.K_ID = $1;`;
             break;
     
         default:
-            query += 'Cuenta.K_IDCUENTA = Cuenta_Aliada.K_IDCUENTAALIADA WHERE Cuenta_Aliada.K_IDCUENTA = $1;';
+            query = `SELECT Cuenta.K_IDCUENTA, Q_SALDO, N_TIPO, Q_CONTRASENNA FROM ${table} INNER JOIN ${tableRelation} ON ${table}.K_IDCUENTA = ${tableRelation}.K_IDCUENTAALIADA WHERE ${tableRelation}.K_IDCUENTA = $1;`;
             break;
     }
 

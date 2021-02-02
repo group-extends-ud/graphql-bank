@@ -299,7 +299,7 @@ export const resolvers: { [x: string]: any; } = {
         },
 
         VincularClienteCuenta: async (_: any, { idCliente, idCuenta }: { [x: string]: number | string; }): Promise<boolean> => {
-            const response = await createRelation("Cliente_Cuenta", "Cliente", idCuenta, idCliente);
+            const response = await createRelation("Cliente_Cuenta", "Cliente", idCliente, idCuenta);
             return (response)? true : false;
         },
         DesvincularClienteCuenta: async (_: any, { idCuenta }: { [id: string]: number | string; }): Promise<boolean> => {
